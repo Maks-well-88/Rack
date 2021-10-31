@@ -1,34 +1,35 @@
-require 'cgi'
+require_relative 'time_formatter'
 
 class Hendler
 
-  TIME_FORMAT = {
-    "year" => "%Y", "month" => "%m", "day" => "%d",
-    "hour" => "%H", "minute" => "%M", "second"=> "%S"
-  }
+  attr_reader :time_formatter
 
-  def process_query_string(query_string)
-    params_of_request = CGI.parse(query_string)
-    @time_params = params_of_request["format"][0].split(',').map(&:downcase).uniq
-    @unknown_time_params = @time_params - %w[year month day hour minute second]
-  end
+  HEADERS = {'Content-Type' => 'text/plain'}
 
   def choose_response
-    if @unknown_time_params.any?
-      response(400, ["Unknown time format #{@unknown_time_params}"])
+    if request_is_valid?
+      response(200, ["#{time_formatter.convert_params_for_response}"])
     else
-      response(200, ["#{set_body_of_success_response}"])
+      response(400, ["Unknown time format #{time_formatter.get_unknown_params}"])
     end
   end
 
-  def set_body_of_success_response
-    search_words = /year|month|day|hour|minute|second/
-    Time.now.strftime(@time_params.join('-').gsub(search_words, TIME_FORMAT))
+  def process_the_request(env)
+    @time_formatter = TimeFormatter.new
+    time_formatter.get_params_of_request(request(env))
   end
 
   private
 
+  def request(env)
+    Rack::Request.new(env)
+  end
+
   def response(status, body)
-    Rack::Response.new(body, status, {'Content-Type' => 'text/plain'}).finish
+    Rack::Response.new(body, status, HEADERS).finish
+  end
+
+  def request_is_valid?
+    time_formatter.get_unknown_params.empty?
   end
 end

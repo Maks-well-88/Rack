@@ -29,6 +29,6 @@ class Hendler
   private
 
   def response(status, body)
-    [status, {'Content-Type' => 'text/plain'}, body]
+    Rack::Response.new(body, status, {'Content-Type' => 'text/plain'}).finish
   end
 end

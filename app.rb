@@ -1,12 +1,13 @@
+# frozen_string_literal: true
+
 require_relative 'hendler'
 
 class App
-
   attr_reader :handler
 
   def call(env)
     start_hendler(env)
-    env['PATH_INFO'] == '/time' ? handler.choose_response : handler.response(404, ["Not found"])
+    env['PATH_INFO'] == '/time' ? handler.choose_response : handler.response(404, ['Not found'])
   end
 
   private
